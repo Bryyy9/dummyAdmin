@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, BookOpen, Map, BarChart3, Settings, LogOut, Menu, X, Users } from "lucide-react"
+import { LayoutDashboard, BookOpen, Map, BarChart3, Settings, LogOut, Menu, X, Users, BookMarked } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -12,6 +12,7 @@ const menuItems = [
   { href: "/admin/cultural-items", label: "Cultural Items", icon: BookOpen },
   { href: "/admin/regions", label: "Regions", icon: Map },
   { href: "/admin/contributors", label: "Contributors", icon: Users },
+  { href: "/admin/references", label: "Referensi", icon: BookMarked },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
