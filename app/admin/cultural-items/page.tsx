@@ -1,11 +1,13 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Trash2, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Edit2, Trash2, Search, Loader2, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -38,8 +40,9 @@ export default function CulturalItemsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [isUsingMockData, setIsUsingMockData] = useState(false)
   const limit = 10
-  
+
   const [formData, setFormData] = useState<CultureCreateInput>({
     namaBudaya: "",
     pulauAsal: "",
@@ -64,6 +67,7 @@ export default function CulturalItemsPage() {
       setItems(response.data)
       setTotal(response.total)
       setTotalPages(response.totalPages)
+      setIsUsingMockData(response.message.includes("mock data"))
     } catch (error) {
       toast.error("Gagal memuat data")
       console.error(error)
@@ -117,7 +121,7 @@ export default function CulturalItemsPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Yakin ingin menghapus item ini?")) return
-    
+
     try {
       await culturesService.delete(id)
       toast.success("Item berhasil dihapus")
@@ -159,13 +163,25 @@ export default function CulturalItemsPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {isUsingMockData && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-yellow-800">Menggunakan Data Mock</p>
+            <p className="text-sm text-yellow-700 mt-1">
+              API tidak tersedia. Pastikan{" "}
+              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">NEXT_PUBLIC_API_URL</code> sudah di-set di
+              environment variables.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Cultural Items</h1>
-          <p className="text-muted-foreground mt-1">
-            Kelola budaya Indonesia ({total} total items)
-          </p>
+          <p className="text-muted-foreground mt-1">Kelola budaya Indonesia ({total} total items)</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
@@ -290,7 +306,7 @@ export default function CulturalItemsPage() {
                     step="any"
                     placeholder="e.g., -7.9797"
                     value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, latitude: Number.parseFloat(e.target.value) })}
                     required
                   />
                 </div>
@@ -302,7 +318,7 @@ export default function CulturalItemsPage() {
                     step="any"
                     placeholder="e.g., 112.6304"
                     value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, longitude: Number.parseFloat(e.target.value) })}
                     required
                   />
                 </div>
@@ -360,14 +376,10 @@ export default function CulturalItemsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm">{item.klasifikasi}</td>
                     <td className="px-6 py-4 text-sm">
-                      <Badge className={statusKonservasiColors[item.statusKonservasi]}>
-                        {item.statusKonservasi}
-                      </Badge>
+                      <Badge className={statusKonservasiColors[item.statusKonservasi]}>{item.statusKonservasi}</Badge>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <Badge className={statusColors[item.status]}>
-                        {item.status}
-                      </Badge>
+                      <Badge className={statusColors[item.status]}>{item.status}</Badge>
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-2">
@@ -390,13 +402,13 @@ export default function CulturalItemsPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, total)} of {total} results
+          Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, total)} of {total} results
         </p>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -405,7 +417,7 @@ export default function CulturalItemsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
             Next
