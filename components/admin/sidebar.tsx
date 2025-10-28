@@ -16,6 +16,7 @@ import {
   ImageIcon,
   Code2,
   Search,
+  ChevronDown,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,15 @@ const menuItems = [
   { href: "/admin/references", label: "Referensi", icon: BookMarked },
   { href: "/admin/assets", label: "Asset", icon: ImageIcon },
   { href: "/admin/codification", label: "Codification", icon: Code2 },
+  {
+    label: "Subculture",
+    icon: BookMarked,
+    submenu: [
+      { href: "/admin/subculture", label: "Subculture List" },
+      { href: "/admin/subculture/create", label: "Create Subculture" },
+      { href: "/admin/subculture/assets", label: "Subculture Assets" },
+    ],
+  },
   { href: "/admin/search-config", label: "Search Config", icon: Search },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -38,6 +48,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([])
 
   const handleLogout = () => {
     // Clear localStorage
@@ -49,6 +60,14 @@ export function Sidebar() {
     // Redirect to login
     router.push("/admin/login")
     router.refresh()
+  }
+
+  const toggleSubmenu = (label: string) => {
+    setExpandedMenus((prev) => (prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label]))
+  }
+
+  const isSubmenuActive = (submenu: any[]) => {
+    return submenu.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
   }
 
   return (
@@ -76,6 +95,56 @@ export function Sidebar() {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
+            if ("submenu" in item) {
+              const isExpanded = expandedMenus.includes(item.label)
+              const hasActiveSubmenu = isSubmenuActive(item.submenu)
+              const Icon = item.icon
+
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => toggleSubmenu(item.label)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      hasActiveSubmenu
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium flex-1 text-left">{item.label}</span>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded ? "rotate-180" : "")} />
+                  </button>
+
+                  {/* Submenu items */}
+                  {isExpanded && (
+                    <div className="ml-4 mt-1 space-y-1 border-l border-border pl-3">
+                      {item.submenu.map((subitem) => {
+                        const isActive = pathname === subitem.href || pathname.startsWith(subitem.href + "/")
+
+                        return (
+                          <Link
+                            key={subitem.href}
+                            href={subitem.href}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm",
+                              isActive
+                                ? "bg-primary/20 text-primary font-medium"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                            )}
+                          >
+                            <span>{subitem.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            // Regular menu item
             const Icon = item.icon
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
 
