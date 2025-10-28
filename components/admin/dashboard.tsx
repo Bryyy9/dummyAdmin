@@ -9,39 +9,39 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  BarChart,
+  Bar,
 } from "recharts"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Map, Users, TrendingUp } from "lucide-react"
+import { BookOpen, Users, FileText, ImageIcon, Code2, BookMarked } from "lucide-react"
 import Link from "next/link"
 
 const dashboardStats = [
-  { label: "Total Cultural Items", value: "156", icon: BookOpen, color: "bg-blue-500/10 text-blue-600" },
-  { label: "Regions", value: "12", icon: Map, color: "bg-purple-500/10 text-purple-600" },
-  { label: "Total Views", value: "24.5K", icon: TrendingUp, color: "bg-green-500/10 text-green-600" },
-  { label: "Active Users", value: "1.2K", icon: Users, color: "bg-orange-500/10 text-orange-600" },
+  { label: "Lexicon Entries", value: "342", icon: BookOpen, color: "bg-blue-500/10 text-blue-600" },
+  { label: "Subcultures", value: "8", icon: BookMarked, color: "bg-purple-500/10 text-purple-600" },
+  { label: "Contributors", value: "24", icon: Users, color: "bg-green-500/10 text-green-600" },
+  { label: "References", value: "156", icon: FileText, color: "bg-orange-500/10 text-orange-600" },
+  { label: "Assets", value: "89", icon: ImageIcon, color: "bg-yellow-500/10 text-yellow-600" },
+  { label: "Codification", value: "45", icon: Code2, color: "bg-red-500/10 text-red-600" },
 ]
 
-const chartData = [
-  { month: "Jan", views: 4000, items: 2400 },
-  { month: "Feb", views: 3000, items: 1398 },
-  { month: "Mar", views: 2000, items: 9800 },
-  { month: "Apr", views: 2780, items: 3908 },
-  { month: "May", views: 1890, items: 4800 },
-  { month: "Jun", views: 2390, items: 3800 },
+const contentDistributionData = [
+  { type: "Lexicon", count: 342 },
+  { type: "Subculture", count: 8 },
+  { type: "References", count: 156 },
+  { type: "Assets", count: 89 },
+  { type: "Codification", count: 45 },
 ]
 
-const categoryData = [
-  { name: "Tari", value: 35 },
-  { name: "Kuliner", value: 28 },
-  { name: "Kerajinan", value: 22 },
-  { name: "Musik", value: 15 },
+const trendData = [
+  { month: "Jan", lexicon: 280, references: 120 },
+  { month: "Feb", lexicon: 295, references: 135 },
+  { month: "Mar", lexicon: 310, references: 145 },
+  { month: "Apr", lexicon: 325, references: 152 },
+  { month: "May", lexicon: 335, references: 156 },
+  { month: "Jun", lexicon: 342, references: 156 },
 ]
-
-const COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"]
 
 export function Dashboard() {
   return (
@@ -49,7 +49,7 @@ export function Dashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome back! Here's your cultural content overview.</p>
+        <p className="text-muted-foreground mt-1">Budaya Jawa Timur - Content Management Overview</p>
       </div>
 
       {/* Stats Grid */}
@@ -74,11 +74,11 @@ export function Dashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Line Chart */}
+        {/* Line Chart - Content Growth Trend */}
         <Card className="lg:col-span-2 p-6">
-          <h2 className="text-lg font-semibold mb-4">Views & Items Trend</h2>
+          <h2 className="text-lg font-semibold mb-4">Content Growth Trend</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
+            <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis stroke="var(--muted-foreground)" />
               <YAxis stroke="var(--muted-foreground)" />
@@ -90,33 +90,29 @@ export function Dashboard() {
                 }}
               />
               <Legend />
-              <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} />
-              <Line type="monotone" dataKey="items" stroke="#8b5cf6" strokeWidth={2} />
+              <Line type="monotone" dataKey="lexicon" stroke="#3b82f6" strokeWidth={2} name="Lexicon Entries" />
+              <Line type="monotone" dataKey="references" stroke="#8b5cf6" strokeWidth={2} name="References" />
             </LineChart>
           </ResponsiveContainer>
         </Card>
 
-        {/* Pie Chart */}
+        {/* Bar Chart - Content Distribution */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Items by Category</h2>
+          <h2 className="text-lg font-semibold mb-4">Content Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+            <BarChart data={contentDistributionData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis type="number" stroke="var(--muted-foreground)" />
+              <YAxis dataKey="type" type="category" stroke="var(--muted-foreground)" width={80} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                }}
+              />
+              <Bar dataKey="count" fill="#3b82f6" />
+            </BarChart>
           </ResponsiveContainer>
         </Card>
       </div>
@@ -125,14 +121,17 @@ export function Dashboard() {
       <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
-          <Link href="/admin/cultural-items">
-            <Button>Add New Cultural Item</Button>
+          <Link href="/admin/lexicon/create">
+            <Button>Add New Lexicon Entry</Button>
           </Link>
-          <Link href="/admin/regions">
-            <Button variant="outline">Manage Regions</Button>
+          <Link href="/admin/subculture/create">
+            <Button variant="outline">Create Subculture</Button>
+          </Link>
+          <Link href="/admin/contributors">
+            <Button variant="outline">Manage Contributors</Button>
           </Link>
           <Link href="/admin/analytics">
-            <Button variant="outline">View Full Analytics</Button>
+            <Button variant="outline">View Analytics</Button>
           </Link>
         </div>
       </Card>
