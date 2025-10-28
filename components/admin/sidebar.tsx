@@ -15,6 +15,7 @@ import {
   BookMarked,
   ImageIcon,
   Code2,
+  Search,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/admin/references", label: "Referensi", icon: BookMarked },
   { href: "/admin/assets", label: "Asset", icon: ImageIcon },
   { href: "/admin/codification", label: "Codification", icon: Code2 },
+  { href: "/admin/search-config", label: "Search Config", icon: Search },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
