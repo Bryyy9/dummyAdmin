@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Trash2, Search, Loader2 } from "lucide-react"
+import { Plus, Edit2, Trash2, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -15,53 +15,55 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { culturalItemsService } from "@/lib/firestore"
+import { culturesService, type Culture, type CultureCreateInput } from "@/lib/api/cultures"
 import { toast } from "sonner"
 
-interface CulturalItem {
-  id: string
-  title: string
-  category: string
-  region: string
-  description: string
-  popularity: number
-  lastUpdated: string
+const statusKonservasiColors = {
+  MAINTAINED: "bg-green-100 text-green-800",
+  ENDANGERED: "bg-yellow-100 text-yellow-800",
+  CRITICAL: "bg-red-100 text-red-800",
 }
 
-const categoryColors = {
-  tari: "bg-blue-100 text-blue-800",
-  batik: "bg-purple-100 text-purple-800",
-  makanan: "bg-orange-100 text-orange-800",
-  musik: "bg-green-100 text-green-800",
-  kerajinan: "bg-pink-100 text-pink-800",
-  wayang: "bg-indigo-100 text-indigo-800",
-  bahasa: "bg-cyan-100 text-cyan-800",
+const statusColors = {
+  PUBLISHED: "bg-blue-100 text-blue-800",
+  DRAFT: "bg-gray-100 text-gray-800",
 }
 
-export function CulturalItemsManagement() {
-  const [items, setItems] = useState<CulturalItem[]>([])
+export default function CulturalItemsPage() {
+  const [items, setItems] = useState<Culture[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [editingItem, setEditingItem] = useState<CulturalItem | null>(null)
+  const [editingItem, setEditingItem] = useState<Culture | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const limit = 10
   
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    region: "",
-    description: "",
-    popularity: 0,
+  const [formData, setFormData] = useState<CultureCreateInput>({
+    namaBudaya: "",
+    pulauAsal: "",
+    provinsi: "",
+    kotaDaerah: "",
+    klasifikasi: "",
+    karakteristik: "",
+    statusKonservasi: "MAINTAINED",
+    latitude: 0,
+    longitude: 0,
+    status: "PUBLISHED",
   })
 
   useEffect(() => {
     loadItems()
-  }, [])
+  }, [currentPage])
 
   const loadItems = async () => {
     try {
       setIsLoading(true)
-      const data = await culturalItemsService.getAll()
-      setItems(data as CulturalItem[])
+      const response = await culturesService.getAll(currentPage, limit)
+      setItems(response.data)
+      setTotal(response.total)
+      setTotalPages(response.totalPages)
     } catch (error) {
       toast.error("Gagal memuat data")
       console.error(error)
@@ -72,18 +74,19 @@ export function CulturalItemsManagement() {
 
   const filteredItems = items.filter(
     (item) =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.region.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.namaBudaya.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.provinsi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.kotaDaerah.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       if (editingItem) {
-        await culturalItemsService.update(editingItem.id, formData)
+        await culturesService.update(editingItem.cultureId, formData)
         toast.success("Item berhasil diupdate")
       } else {
-        await culturalItemsService.create(formData)
+        await culturesService.create(formData)
         toast.success("Item berhasil ditambahkan")
       }
       setIsDialogOpen(false)
@@ -95,23 +98,28 @@ export function CulturalItemsManagement() {
     }
   }
 
-  const handleEdit = (item: CulturalItem) => {
+  const handleEdit = (item: Culture) => {
     setEditingItem(item)
     setFormData({
-      title: item.title,
-      category: item.category,
-      region: item.region,
-      description: item.description,
-      popularity: item.popularity,
+      namaBudaya: item.namaBudaya,
+      pulauAsal: item.pulauAsal,
+      provinsi: item.provinsi,
+      kotaDaerah: item.kotaDaerah,
+      klasifikasi: item.klasifikasi,
+      karakteristik: item.karakteristik,
+      statusKonservasi: item.statusKonservasi,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      status: item.status,
     })
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm("Yakin ingin menghapus item ini?")) return
     
     try {
-      await culturalItemsService.delete(id)
+      await culturesService.delete(id)
       toast.success("Item berhasil dihapus")
       loadItems()
     } catch (error) {
@@ -122,11 +130,16 @@ export function CulturalItemsManagement() {
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      category: "",
-      region: "",
-      description: "",
-      popularity: 0,
+      namaBudaya: "",
+      pulauAsal: "",
+      provinsi: "",
+      kotaDaerah: "",
+      klasifikasi: "",
+      karakteristik: "",
+      statusKonservasi: "MAINTAINED",
+      latitude: 0,
+      longitude: 0,
+      status: "PUBLISHED",
     })
     setEditingItem(null)
   }
@@ -150,7 +163,9 @@ export function CulturalItemsManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Cultural Items</h1>
-          <p className="text-muted-foreground mt-1">Manage all cultural items in the database</p>
+          <p className="text-muted-foreground mt-1">
+            Kelola budaya Indonesia ({total} total items)
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
@@ -159,7 +174,7 @@ export function CulturalItemsManagement() {
               Add Item
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingItem ? "Edit" : "Add New"} Cultural Item</DialogTitle>
               <DialogDescription>
@@ -167,75 +182,132 @@ export function CulturalItemsManagement() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="namaBudaya">Nama Budaya *</Label>
+                  <Input
+                    id="namaBudaya"
+                    placeholder="e.g., Budaya Jawa"
+                    value={formData.namaBudaya}
+                    onChange={(e) => setFormData({ ...formData, namaBudaya: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pulauAsal">Pulau Asal *</Label>
+                  <Input
+                    id="pulauAsal"
+                    placeholder="e.g., Jawa"
+                    value={formData.pulauAsal}
+                    onChange={(e) => setFormData({ ...formData, pulauAsal: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="provinsi">Provinsi *</Label>
+                  <Input
+                    id="provinsi"
+                    placeholder="e.g., Jawa Timur"
+                    value={formData.provinsi}
+                    onChange={(e) => setFormData({ ...formData, provinsi: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="kotaDaerah">Kota/Daerah *</Label>
+                  <Input
+                    id="kotaDaerah"
+                    placeholder="e.g., Malang"
+                    value={formData.kotaDaerah}
+                    onChange={(e) => setFormData({ ...formData, kotaDaerah: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="klasifikasi">Klasifikasi *</Label>
                 <Input
-                  id="title"
-                  placeholder="Item title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  id="klasifikasi"
+                  placeholder="e.g., Orangnya medok"
+                  value={formData.klasifikasi}
+                  onChange={(e) => setFormData({ ...formData, klasifikasi: e.target.value })}
                   required
                 />
               </div>
+
               <div>
-                <Label htmlFor="category">Category</Label>
-                <select
-                  id="category"
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  required
-                >
-                  <option value="">Pilih kategori</option>
-                  <option value="tari">Tari</option>
-                  <option value="batik">Batik</option>
-                  <option value="makanan">Makanan</option>
-                  <option value="musik">Musik</option>
-                  <option value="kerajinan">Kerajinan</option>
-                  <option value="wayang">Wayang</option>
-                  <option value="bahasa">Bahasa</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="region">Region</Label>
-                <select
-                  id="region"
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                  value={formData.region}
-                  onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                  required
-                >
-                  <option value="">Pilih region</option>
-                  <option value="Arekan">Arekan</option>
-                  <option value="Madura">Madura</option>
-                  <option value="Mataraman">Mataraman</option>
-                  <option value="Osing">Osing</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="karakteristik">Karakteristik *</Label>
                 <textarea
-                  id="description"
+                  id="karakteristik"
                   className="w-full min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-                  placeholder="Description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Deskripsi karakteristik budaya"
+                  value={formData.karakteristik}
+                  onChange={(e) => setFormData({ ...formData, karakteristik: e.target.value })}
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="popularity">Popularity (0-100)</Label>
-                <Input
-                  id="popularity"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Popularity"
-                  value={formData.popularity}
-                  onChange={(e) => setFormData({ ...formData, popularity: parseInt(e.target.value) })}
-                  required
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="statusKonservasi">Status Konservasi *</Label>
+                  <select
+                    id="statusKonservasi"
+                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                    value={formData.statusKonservasi}
+                    onChange={(e) => setFormData({ ...formData, statusKonservasi: e.target.value as any })}
+                    required
+                  >
+                    <option value="MAINTAINED">Maintained</option>
+                    <option value="ENDANGERED">Endangered</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="status">Status Publikasi *</Label>
+                  <select
+                    id="status"
+                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    required
+                  >
+                    <option value="PUBLISHED">Published</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="latitude">Latitude *</Label>
+                  <Input
+                    id="latitude"
+                    type="number"
+                    step="any"
+                    placeholder="e.g., -7.9797"
+                    value={formData.latitude}
+                    onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="longitude">Longitude *</Label>
+                  <Input
+                    id="longitude"
+                    type="number"
+                    step="any"
+                    placeholder="e.g., 112.6304"
+                    value={formData.longitude}
+                    onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+              </div>
+
               <Button type="submit" className="w-full">
                 {editingItem ? "Update" : "Save"} Item
               </Button>
@@ -248,7 +320,7 @@ export function CulturalItemsManagement() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search items..."
+          placeholder="Search by name, province, or city..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -261,44 +333,48 @@ export function CulturalItemsManagement() {
           <table className="w-full">
             <thead className="bg-muted border-b border-border">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Title</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Category</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Region</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Popularity</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Nama Budaya</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Lokasi</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Klasifikasi</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Status Konservasi</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                     No items found
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium">{item.title}</td>
+                  <tr key={item.cultureId} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium">{item.namaBudaya}</td>
                     <td className="px-6 py-4 text-sm">
-                      <Badge className={categoryColors[item.category as keyof typeof categoryColors]}>
-                        {item.category}
+                      <div>
+                        <p className="font-medium">{item.kotaDaerah}</p>
+                        <p className="text-xs text-muted-foreground">{item.provinsi}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">{item.klasifikasi}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <Badge className={statusKonservasiColors[item.statusKonservasi]}>
+                        {item.statusKonservasi}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm">{item.region}</td>
                     <td className="px-6 py-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500" style={{ width: `${item.popularity}%` }} />
-                        </div>
-                        <span className="text-xs font-medium">{item.popularity}%</span>
-                      </div>
+                      <Badge className={statusColors[item.status]}>
+                        {item.status}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.cultureId)}>
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
                       </div>
@@ -310,6 +386,33 @@ export function CulturalItemsManagement() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, total)} of {total} results
+        </p>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
