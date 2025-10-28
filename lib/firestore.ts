@@ -68,4 +68,4 @@ export const regionsService = {
     const docRef = doc(db, COLLECTIONS.REGIONS, id)
     return await deleteDoc(docRef)
   },
-}   
+}
