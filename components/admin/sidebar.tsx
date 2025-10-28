@@ -39,6 +39,16 @@ const menuItems = [
       { href: "/admin/subculture/assets", label: "Subculture Assets" },
     ],
   },
+  {
+    label: "Lexicon",
+    icon: BookOpen,
+    submenu: [
+      { href: "/admin/lexicon", label: "Lexicon List" },
+      { href: "/admin/lexicon/create", label: "Create Lexicon" },
+      { href: "/admin/lexicon/assets", label: "Lexicon Assets" },
+      { href: "/admin/lexicon/references", label: "Lexicon References" },
+    ],
+  },
   { href: "/admin/search-config", label: "Search Config", icon: Search },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
