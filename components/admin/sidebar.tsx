@@ -14,6 +14,7 @@ import {
   Users,
   BookMarked,
   ImageIcon,
+  Code2,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ const menuItems = [
   { href: "/admin/contributors", label: "Contributors", icon: Users },
   { href: "/admin/references", label: "Referensi", icon: BookMarked },
   { href: "/admin/assets", label: "Asset", icon: ImageIcon },
+  { href: "/admin/codification", label: "Codification", icon: Code2 },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
