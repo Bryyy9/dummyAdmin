@@ -115,9 +115,9 @@ export function Sidebar() {
                   <button
                     onClick={() => toggleSubmenu(item.label)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200",
                       hasActiveSubmenu
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-black text-white"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
@@ -138,9 +138,9 @@ export function Sidebar() {
                             href={subitem.href}
                             onClick={() => setIsOpen(false)}
                             className={cn(
-                              "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm",
+                              "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 text-sm",
                               isActive
-                                ? "bg-primary/20 text-primary font-medium"
+                                ? "bg-black text-white font-medium"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
                             )}
                           >
@@ -164,10 +164,8 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200",
+                  isActive ? "bg-black text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon className="w-5 h-5" />
