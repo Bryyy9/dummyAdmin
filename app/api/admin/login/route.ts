@@ -12,28 +12,64 @@ const ADMIN_USERS = [
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const body = await request.json()
+    const { email, password } = body
+
+    console.log("Login attempt:", { email, password: "***" })
 
     // Validate input
     if (!email || !password) {
-      return NextResponse.json({ message: "Email and password are required" }, { status: 400 })
+      return NextResponse.json(
+        { message: "Email and password are required" },
+        { status: 400 }
+      )
     }
 
     // Find user
-    const user = ADMIN_USERS.find((u) => u.email === email && u.password === password)
+    const user = ADMIN_USERS.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    )
 
     if (!user) {
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 })
+      console.log("User not found or password mismatch")
+      return NextResponse.json(
+        { message: "Invalid email or password" },
+        { status: 401 }
+      )
     }
 
     // Create token (in production, use JWT)
-    const token = Buffer.from(JSON.stringify({ id: user.id, email: user.email })).toString("base64")
+    const token = Buffer.from(
+      JSON.stringify({
+        id: user.id,
+        email: user.email,
+        timestamp: Date.now(),
+      })
+    ).toString("base64")
 
-    return NextResponse.json({
+    console.log("Login successful for:", user.email)
+
+    const response = NextResponse.json({
+      success: true,
       token,
       user: { id: user.id, email: user.email, name: user.name },
     })
+
+    // Set cookie
+    response.cookies.set("adminToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: "/",
+    })
+
+    return response
   } catch (error) {
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    console.error("Login error:", error)
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    )
   }
 }
