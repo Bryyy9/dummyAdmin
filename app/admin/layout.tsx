@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Sidebar } from "@/components/admin/sidebar"
 import { TopBar } from "@/components/admin/top-bar"
@@ -16,6 +16,7 @@ export default function AdminLayout({
   const pathname = usePathname()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const authCheckInProgress = useRef(false)
 
   useEffect(() => {
     // Skip auth check for login page
@@ -24,7 +25,12 @@ export default function AdminLayout({
       return
     }
 
+    if (authCheckInProgress.current) {
+      return
+    }
+
     const checkAuth = async () => {
+      authCheckInProgress.current = true
       try {
         const token = localStorage.getItem("adminToken")
 
@@ -45,20 +51,22 @@ export default function AdminLayout({
           console.log("Token verified successfully")
           setIsAuthenticated(true)
         } else {
-          console.log("Token verification failed")
+          console.log("Token verification failed, status:", response.status)
           localStorage.removeItem("adminToken")
           router.push("/admin/login")
         }
       } catch (error) {
         console.error("Auth check error:", error)
+        localStorage.removeItem("adminToken")
         router.push("/admin/login")
       } finally {
         setIsLoading(false)
+        authCheckInProgress.current = false
       }
     }
 
     checkAuth()
-  }, [router, pathname])
+  }, [pathname])
 
   // Show login page without layout
   if (pathname === "/admin/login") {

@@ -5,21 +5,24 @@ export async function GET(request: NextRequest) {
     // Check both Authorization header and cookie
     const authHeader = request.headers.get("authorization")
     const cookieToken = request.cookies.get("adminToken")?.value
-    
+
     const token = authHeader?.replace("Bearer ", "") || cookieToken
 
     console.log("Verifying token:", token ? "Token exists" : "No token")
 
     if (!token) {
-      return NextResponse.json(
-        { message: "Unauthorized - No token provided" },
-        { status: 401 }
-      )
+      return NextResponse.json({ message: "Unauthorized - No token provided" }, { status: 401 })
     }
 
     try {
-      // Decode token (in production, verify JWT)
-      const decoded = JSON.parse(Buffer.from(token, "base64").toString())
+      let decoded
+      try {
+        const decodedString = Buffer.from(token, "base64").toString()
+        decoded = JSON.parse(decodedString)
+      } catch (parseError) {
+        console.error("Token parse error:", parseError)
+        return NextResponse.json({ message: "Invalid token format" }, { status: 401 })
+      }
 
       console.log("Token decoded successfully:", decoded.email)
 
@@ -28,10 +31,7 @@ export async function GET(request: NextRequest) {
       const maxAge = 24 * 60 * 60 * 1000 // 24 hours
 
       if (tokenAge > maxAge) {
-        return NextResponse.json(
-          { message: "Token expired" },
-          { status: 401 }
-        )
+        return NextResponse.json({ message: "Token expired" }, { status: 401 })
       }
 
       return NextResponse.json({
@@ -43,16 +43,10 @@ export async function GET(request: NextRequest) {
       })
     } catch (decodeError) {
       console.error("Token decode error:", decodeError)
-      return NextResponse.json(
-        { message: "Invalid token format" },
-        { status: 401 }
-      )
+      return NextResponse.json({ message: "Invalid token format" }, { status: 401 })
     }
   } catch (error) {
     console.error("Verify error:", error)
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,25 +14,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken")
-    if (token) {
-      // Verify token is still valid
-      fetch("/api/admin/verify", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => {
-          if (res.ok) {
-            router.push("/admin")
-          }
-        })
-        .catch(() => {
-          localStorage.removeItem("adminToken")
-        })
-    }
-  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,18 +50,17 @@ export default function AdminLoginPage() {
 
       // Store token in localStorage and cookie
       localStorage.setItem("adminToken", data.token)
-      
+
       // Also set cookie for server-side checks
       document.cookie = `adminToken=${data.token}; path=/; max-age=86400` // 24 hours
 
       console.log("Login successful, redirecting...")
-      
+
       // Small delay to ensure storage is set
       setTimeout(() => {
         router.push("/admin")
         router.refresh()
       }, 100)
-      
     } catch (err) {
       console.error("Login error:", err)
       setError("An error occurred. Please try again.")
