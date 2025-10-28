@@ -42,7 +42,43 @@ const MOCK_CONTRIBUTORS: Contributor[] = [
     email: "budi@unair.ac.id",
     expertiseArea: "Budaya Jawa",
     contactInfo: "+62-31-1234567",
-    registeredAt: new Date().toISOString(),
+    registeredAt: new Date(2024, 0, 15).toISOString(),
+  },
+  {
+    contributorId: 2,
+    namaContributor: "Prof. Siti Nurhaliza",
+    institusi: "Universitas Indonesia",
+    email: "siti@ui.ac.id",
+    expertiseArea: "Budaya Indonesia",
+    contactInfo: "+62-21-7654321",
+    registeredAt: new Date(2024, 1, 20).toISOString(),
+  },
+  {
+    contributorId: 3,
+    namaContributor: "Dr. Ahmad Wijaya",
+    institusi: "Institut Teknologi Bandung",
+    email: "ahmad@itb.ac.id",
+    expertiseArea: "Budaya Jawa",
+    contactInfo: "+62-274-1234567",
+    registeredAt: new Date(2024, 2, 10).toISOString(),
+  },
+  {
+    contributorId: 4,
+    namaContributor: "Dr. Rina Kusuma",
+    institusi: "Universitas Gadjah Mada",
+    email: "rina@ugm.ac.id",
+    expertiseArea: "Budaya Indonesia",
+    contactInfo: "+62-274-9876543",
+    registeredAt: new Date(2024, 3, 5).toISOString(),
+  },
+  {
+    contributorId: 5,
+    namaContributor: "Prof. Hendra Gunawan",
+    institusi: "Universitas Padjadjaran",
+    email: "hendra@unpad.ac.id",
+    expertiseArea: "Budaya Jawa",
+    contactInfo: "+62-22-5555555",
+    registeredAt: new Date(2024, 4, 12).toISOString(),
   },
 ]
 
@@ -57,13 +93,24 @@ class ContributorsService {
 
   async getAll(page = 1, limit = 10): Promise<ContributorsListResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/contributors?page=${page}&limit=${limit}`, {
+      const url = `${API_BASE_URL}/contributors?page=${page}&limit=${limit}`
+      console.log("[v0] Fetching contributors from:", url)
+
+      const response = await fetch(url, {
         headers: this.getAuthHeaders(),
       })
-      if (!response.ok) throw new Error(`API Error: ${response.status}`)
-      return response.json()
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("[v0] Successfully fetched contributors from API")
+      return data
     } catch (error) {
-      console.error("[v0] Failed to fetch contributors:", error)
+      console.error("[v0] Failed to fetch contributors from API:", error)
+      console.log("[v0] Using mock data as fallback. Make sure NEXT_PUBLIC_API_URL is set correctly.")
+
       const start = (page - 1) * limit
       const end = start + limit
       return {

@@ -75,9 +75,10 @@ export default function ContributorsPage() {
       setTotal(response.total)
       setTotalPages(response.totalPages)
       setIsUsingMockData(response.message.includes("mock data"))
+      console.log("[v0] Contributors loaded successfully")
     } catch (error) {
+      console.error("[v0] Error loading contributors:", error)
       toast.error("Gagal memuat data contributor")
-      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -181,7 +182,8 @@ export default function ContributorsPage() {
             <p className="text-sm text-yellow-700 mt-1">
               API tidak tersedia. Pastikan{" "}
               <code className="bg-yellow-100 px-2 py-1 rounded text-xs">NEXT_PUBLIC_API_URL</code> sudah di-set di
-              environment variables.
+              environment variables. Contoh:{" "}
+              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">http://localhost:8000/api/v1</code>
             </p>
           </div>
         </div>
