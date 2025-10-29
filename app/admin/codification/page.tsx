@@ -72,7 +72,7 @@ export default function CodificationPage() {
       setDomains(response.data)
       setTotal(response.total)
       setTotalPages(response.totalPages)
-      setIsUsingMockData(response.message.includes("mock data"))
+      setIsUsingMockData(response.message?.includes("mock data") ?? false)
       console.log("[v0] Domains loaded successfully")
     } catch (error) {
       console.error("[v0] Error loading domains:", error)
