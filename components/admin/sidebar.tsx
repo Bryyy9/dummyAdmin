@@ -10,7 +10,7 @@ import {
   Settings,
   LogOut,
   Menu,
-  X,
+  X,  
   Users,
   BookMarked,
   ImageIcon,

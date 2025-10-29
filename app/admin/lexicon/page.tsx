@@ -34,7 +34,7 @@ export default function LexiconListPage() {
   const fetchLexicons = async () => {
     try {
       setLoading(true)
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/lexicons`)
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/lexicons`)
       url.searchParams.append("page", currentPage.toString())
       url.searchParams.append("limit", "20")
 

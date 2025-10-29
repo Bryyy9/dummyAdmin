@@ -28,7 +28,7 @@ export default function LexiconReferencesPage() {
     try {
       setLoading(true)
       // This would fetch all lexicon references - adjust endpoint as needed
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/lexicons`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/lexicons`)
       const data = await response.json()
       // Process data to extract references
       setReferences([])

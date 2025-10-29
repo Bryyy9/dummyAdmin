@@ -23,7 +23,7 @@ export default function SubcultureListPage() {
   useEffect(() => {
     const fetchSubcultures = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subcultures`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subcultures`)
         if (!response.ok) throw new Error("Failed to fetch subcultures")
         const data = await response.json()
         setSubcultures(data.data || [])
@@ -41,7 +41,7 @@ export default function SubcultureListPage() {
     if (!confirm("Are you sure you want to delete this subculture?")) return
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subcultures/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subcultures/${id}`, {
         method: "DELETE",
       })
       if (!response.ok) throw new Error("Failed to delete subculture")

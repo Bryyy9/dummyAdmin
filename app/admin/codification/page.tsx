@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Edit2,
@@ -18,7 +18,7 @@ import {
   AlertCircle,
   Calendar,
   Code,
-} from "lucide-react"
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,32 +26,40 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   domainKodifikasiService,
   type DomainKodifikasi,
   type DomainKodifikasiCreateInput,
-} from "@/lib/api/domain-kodifikasi"
-import { toast } from "sonner"
+} from "@/lib/api/domain-kodifikasi";
+import { toast } from "sonner";
 
 const statusColors: Record<string, string> = {
   PUBLISHED: "bg-emerald-100 text-emerald-800",
   DRAFT: "bg-yellow-100 text-yellow-800",
-}
+};
 
 export default function CodificationPage() {
-  const [domains, setDomains] = useState<DomainKodifikasi[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [editingDomain, setEditingDomain] = useState<DomainKodifikasi | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [isUsingMockData, setIsUsingMockData] = useState(false)
-  const limit = 10
+  const [domains, setDomains] = useState<DomainKodifikasi[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editingDomain, setEditingDomain] = useState<DomainKodifikasi | null>(
+    null
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isUsingMockData, setIsUsingMockData] = useState(false);
+  const limit = 10;
 
   const [formData, setFormData] = useState<DomainKodifikasiCreateInput>({
     kode: "",
@@ -59,79 +67,98 @@ export default function CodificationPage() {
     penjelasan: "",
     subcultureId: 1,
     status: "PUBLISHED",
-  })
+  });
 
   useEffect(() => {
-    loadDomains()
-  }, [currentPage])
+    console.log("[DEBUG] useEffect triggered, currentPage:", currentPage);
+    loadDomains();
+  }, [currentPage]);
 
+  // Ubah loadDomains function (sekitar baris 46)
   const loadDomains = async () => {
+    console.log("[DEBUG] loadDomains function called");
     try {
-      setIsLoading(true)
-      const response = await domainKodifikasiService.getAll(currentPage, limit)
-      setDomains(response.data)
-      setTotal(response.total)
-      setTotalPages(response.totalPages)
-      setIsUsingMockData(response.message?.includes("mock data") ?? false)
-      console.log("[v0] Domains loaded successfully")
-    } catch (error) {
-      console.error("[v0] Error loading domains:", error)
-      toast.error("Gagal memuat data domain")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      setIsLoading(true);
+      console.log("[DEBUG] About to call domainKodifikasiService.getAll");
+      console.log("[DEBUG] Service instance:", domainKodifikasiService);
 
+      const response = await domainKodifikasiService.getAll(currentPage, limit);
+      console.log("[DEBUG] Service response:", response);
+
+      setDomains(response.data || []);
+      setTotal(response.total || 0);
+      setTotalPages(response.totalPages || 1);
+      setIsUsingMockData(response.message?.includes("mock data") ?? false);
+      console.log(
+        "[DEBUG] State updated - domains:",
+        response.data?.length || 0
+      );
+    } catch (error) {
+      console.error("[DEBUG] Error in loadDomains:", error);
+      setDomains([]);
+      setTotal(0);
+      setTotalPages(1);
+      toast.error("Gagal memuat data domain");
+    } finally {
+      setIsLoading(false);
+      console.log("[DEBUG] Loading finished");
+    }
+  };
+
+  // Ubah bagian filteredDomains (sekitar baris 85)
   const filteredDomains = (domains || []).filter(
     (domain) =>
       domain.kode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       domain.namaDomain.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      domain.penjelasan.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      domain.penjelasan.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       if (editingDomain) {
-        await domainKodifikasiService.update(editingDomain.domainKodifikasiId, formData)
-        toast.success("Domain berhasil diupdate")
+        await domainKodifikasiService.update(
+          editingDomain.domainKodifikasiId,
+          formData
+        );
+        toast.success("Domain berhasil diupdate");
       } else {
-        await domainKodifikasiService.create(formData)
-        toast.success("Domain berhasil ditambahkan")
+        await domainKodifikasiService.create(formData);
+        toast.success("Domain berhasil ditambahkan");
       }
-      setIsDialogOpen(false)
-      resetForm()
-      loadDomains()
+      setIsDialogOpen(false);
+      resetForm();
+      loadDomains();
     } catch (error) {
-      toast.error("Gagal menyimpan data")
-      console.error(error)
+      toast.error("Gagal menyimpan data");
+      console.error(error);
     }
-  }
+  };
 
   const handleEdit = (domain: DomainKodifikasi) => {
-    setEditingDomain(domain)
+    setEditingDomain(domain);
     setFormData({
       kode: domain.kode,
       namaDomain: domain.namaDomain,
       penjelasan: domain.penjelasan,
       subcultureId: domain.subcultureId,
       status: domain.status,
-    })
-    setIsDialogOpen(true)
-  }
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Yakin ingin menghapus domain ini?")) return
+    if (!confirm("Yakin ingin menghapus domain ini?")) return;
 
     try {
-      await domainKodifikasiService.delete(id)
-      toast.success("Domain berhasil dihapus")
-      loadDomains()
+      await domainKodifikasiService.delete(id);
+      toast.success("Domain berhasil dihapus");
+      loadDomains();
     } catch (error) {
-      toast.error("Gagal menghapus domain")
-      console.error(error)
+      toast.error("Gagal menghapus domain");
+      console.error(error);
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -140,25 +167,25 @@ export default function CodificationPage() {
       penjelasan: "",
       subcultureId: 1,
       status: "PUBLISHED",
-    })
-    setEditingDomain(null)
-  }
+    });
+    setEditingDomain(null);
+  };
 
   const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) resetForm()
-  }
+    setIsDialogOpen(open);
+    if (!open) resetForm();
+  };
 
   const getStatusColor = (status: string) => {
-    return statusColors[status] || "bg-gray-100 text-gray-800"
-  }
+    return statusColors[status] || "bg-gray-100 text-gray-800";
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
@@ -167,12 +194,18 @@ export default function CodificationPage() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-yellow-800">Menggunakan Data Mock</p>
+            <p className="text-sm font-medium text-yellow-800">
+              Menggunakan Data Mock
+            </p>
             <p className="text-sm text-yellow-700 mt-1">
               API tidak tersedia. Pastikan{" "}
-              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">NEXT_PUBLIC_API_URL</code> sudah di-set di
-              environment variables. Contoh:{" "}
-              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">http://localhost:8000/api/v1</code>
+              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">
+                NEXT_PUBLIC_API_URL
+              </code>{" "}
+              sudah di-set di environment variables. Contoh:{" "}
+              <code className="bg-yellow-100 px-2 py-1 rounded text-xs">
+                http://localhost:8000/api/v1
+              </code>
             </p>
           </div>
         </div>
@@ -182,7 +215,9 @@ export default function CodificationPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Codification</h1>
-          <p className="text-muted-foreground mt-1">Kelola domain kodifikasi budaya ({total} total domain)</p>
+          <p className="text-muted-foreground mt-1">
+            Kelola domain kodifikasi budaya ({total} total domain)
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
@@ -193,9 +228,12 @@ export default function CodificationPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingDomain ? "Edit" : "Tambah"} Domain Kodifikasi</DialogTitle>
+              <DialogTitle>
+                {editingDomain ? "Edit" : "Tambah"} Domain Kodifikasi
+              </DialogTitle>
               <DialogDescription>
-                Isi detail untuk {editingDomain ? "mengupdate" : "menambahkan"} domain kodifikasi baru.
+                Isi detail untuk {editingDomain ? "mengupdate" : "menambahkan"}{" "}
+                domain kodifikasi baru.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +244,9 @@ export default function CodificationPage() {
                     id="kode"
                     placeholder="e.g., AK, TT, DA"
                     value={formData.kode}
-                    onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, kode: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -217,7 +257,12 @@ export default function CodificationPage() {
                     type="number"
                     placeholder="e.g., 5"
                     value={formData.subcultureId}
-                    onChange={(e) => setFormData({ ...formData, subcultureId: Number.parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        subcultureId: Number.parseInt(e.target.value),
+                      })
+                    }
                     required
                   />
                 </div>
@@ -229,7 +274,9 @@ export default function CodificationPage() {
                   id="namaDomain"
                   placeholder="e.g., Agama dan Kepercayaan Tengger"
                   value={formData.namaDomain}
-                  onChange={(e) => setFormData({ ...formData, namaDomain: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, namaDomain: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -240,7 +287,9 @@ export default function CodificationPage() {
                   id="penjelasan"
                   placeholder="Deskripsi lengkap tentang domain"
                   value={formData.penjelasan}
-                  onChange={(e) => setFormData({ ...formData, penjelasan: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, penjelasan: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -249,7 +298,9 @@ export default function CodificationPage() {
                 <Label htmlFor="status">Status *</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, status: value as any })
+                  }
                 >
                   <SelectTrigger id="status">
                     <SelectValue />
@@ -286,26 +337,47 @@ export default function CodificationPage() {
           <table className="w-full">
             <thead className="bg-muted border-b border-border">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Kode</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Nama Domain</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Penjelasan</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Dibuat</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Kode
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Nama Domain
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Penjelasan
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Dibuat
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredDomains.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-8 text-center text-muted-foreground"
+                  >
                     Tidak ada domain ditemukan
                   </td>
                 </tr>
               ) : (
                 filteredDomains.map((domain) => (
-                  <tr key={domain.domainKodifikasiId} className="hover:bg-muted/50 transition-colors">
+                  <tr
+                    key={domain.domainKodifikasiId}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
                     <td className="px-6 py-4 text-sm font-medium">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200"
+                      >
                         <Code className="w-3 h-3 mr-1" />
                         {domain.kode}
                       </Badge>
@@ -316,10 +388,14 @@ export default function CodificationPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm max-w-xs">
-                      <div className="truncate text-muted-foreground">{domain.penjelasan}</div>
+                      <div className="truncate text-muted-foreground">
+                        {domain.penjelasan}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <Badge className={getStatusColor(domain.status)}>{domain.status}</Badge>
+                      <Badge className={getStatusColor(domain.status)}>
+                        {domain.status}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -329,10 +405,20 @@ export default function CodificationPage() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(domain)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(domain)}
+                        >
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(domain.domainKodifikasiId)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            handleDelete(domain.domainKodifikasiId)
+                          }
+                        >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
                       </div>
@@ -348,7 +434,8 @@ export default function CodificationPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Menampilkan {(currentPage - 1) * limit + 1} hingga {Math.min(currentPage * limit, total)} dari {total} hasil
+          Menampilkan {(currentPage - 1) * limit + 1} hingga{" "}
+          {Math.min(currentPage * limit, total)} dari {total} hasil
         </p>
         <div className="flex gap-2">
           <Button
@@ -372,5 +459,5 @@ export default function CodificationPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

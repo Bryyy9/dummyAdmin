@@ -1,74 +1,110 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CreateSubculturePage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     namaSubculture: "",
     penjelasan: "",
-    cultureId: "",
+    cultureId: 0, // ← Change from "" to 0 (number)
     status: "PUBLISHED",
     statusKonservasi: "MAINTAINED",
-  })
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subcultures`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
+      // Convert cultureId to number before sending
+      const payload = {
+        ...formData,
+        cultureId: Number(formData.cultureId), // ← Add this conversion
+      };
 
-      if (!response.ok) throw new Error("Failed to create subculture")
+      console.log("Sending payload:", payload); // Debug log
 
-      router.push("/admin/subculture")
-      router.refresh()
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subcultures`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload), // ← Use converted payload
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create subculture");
+      }
+
+      router.push("/admin/subculture");
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Create Subculture</h1>
-        <p className="text-muted-foreground mt-2">Add a new cultural subculture</p>
+        <p className="text-muted-foreground mt-2">
+          Add a new cultural subculture
+        </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Subculture Details</CardTitle>
-          <CardDescription>Fill in the information for the new subculture</CardDescription>
+          <CardDescription>
+            Fill in the information for the new subculture
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <div className="p-4 bg-destructive/10 text-destructive rounded-lg">{error}</div>}
+            {error && (
+              <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+                {error}
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Subculture Name</label>
@@ -97,9 +133,14 @@ export default function CreateSubculturePage() {
               <label className="text-sm font-medium">Culture ID</label>
               <Input
                 name="cultureId"
-                type="number"
+                type="number" // ← Keep this
                 value={formData.cultureId}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    cultureId: Number(e.target.value), // ← Convert immediately on change
+                  })
+                }
                 placeholder="Enter culture ID"
                 required
               />
@@ -108,7 +149,10 @@ export default function CreateSubculturePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleSelectChange("status", value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -120,10 +164,14 @@ export default function CreateSubculturePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Conservation Status</label>
+                <label className="text-sm font-medium">
+                  Conservation Status
+                </label>
                 <Select
                   value={formData.statusKonservasi}
-                  onValueChange={(value) => handleSelectChange("statusKonservasi", value)}
+                  onValueChange={(value) =>
+                    handleSelectChange("statusKonservasi", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -141,7 +189,11 @@ export default function CreateSubculturePage() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Subculture"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
                 Cancel
               </Button>
             </div>
@@ -149,5 +201,5 @@ export default function CreateSubculturePage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

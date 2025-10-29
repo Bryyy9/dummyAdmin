@@ -44,7 +44,7 @@ export default function CreateLexiconPage() {
 
   const fetchDomains = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/domain-kodifikasi`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/domain-kodifikasi`)
       const data = await response.json()
       setDomains(data.data || [])
     } catch (error) {
@@ -66,7 +66,7 @@ export default function CreateLexiconPage() {
     setLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/lexicons`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/lexicons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

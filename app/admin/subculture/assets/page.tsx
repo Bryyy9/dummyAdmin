@@ -27,7 +27,7 @@ export default function SubcultureAssetsPage() {
     const fetchAssets = async () => {
       try {
         // Fetch all subcultures first to get their assets
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subcultures`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subcultures`)
         if (!response.ok) throw new Error("Failed to fetch subcultures")
         const data = await response.json()
 
