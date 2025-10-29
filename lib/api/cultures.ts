@@ -101,8 +101,10 @@ class CulturesService {
 
       return response.json()
     } catch (error) {
-      console.error("[v0] Failed to fetch from API, using mock data:", error)
-      console.log("[v0] Make sure NEXT_PUBLIC_API_URL is set correctly in environment variables")
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error("[v0] Failed to fetch from API, using mock data:", errorMessage)
+      console.log("[v0] API URL being used:", API_BASE_URL)
+      console.log("[v0] To fix this, set NEXT_PUBLIC_API_URL in your environment variables to point to your API server")
 
       // Return mock data as fallback
       const start = (page - 1) * limit
