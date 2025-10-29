@@ -82,7 +82,7 @@ export default function CodificationPage() {
     }
   }
 
-  const filteredDomains = domains.filter(
+  const filteredDomains = (domains || []).filter(
     (domain) =>
       domain.kode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       domain.namaDomain.toLowerCase().includes(searchTerm.toLowerCase()) ||
