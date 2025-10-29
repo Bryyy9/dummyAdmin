@@ -72,7 +72,7 @@ export default function CodificationPage() {
       setDomains(response.data)
       setTotal(response.total)
       setTotalPages(response.totalPages)
-      setIsUsingMockData(response.message?.includes("mock data") ?? false)
+      setIsUsingMockData(response.message.includes("mock data"))
       console.log("[v0] Domains loaded successfully")
     } catch (error) {
       console.error("[v0] Error loading domains:", error)
@@ -82,7 +82,7 @@ export default function CodificationPage() {
     }
   }
 
-  const filteredDomains = (domains || []).filter(
+  const filteredDomains = domains.filter(
     (domain) =>
       domain.kode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       domain.namaDomain.toLowerCase().includes(searchTerm.toLowerCase()) ||
