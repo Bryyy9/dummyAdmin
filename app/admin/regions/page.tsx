@@ -1,5 +1,5 @@
-import { RegionsManagement } from "@/components/admin/regions-management"
+// import { RegionsManagement } from "@/components/admin/regions-management"
 
-export default function RegionsPage() {
-  return <RegionsManagement />
-}
+// export default function RegionsPage() {
+//   return <RegionsManagement />
+// }

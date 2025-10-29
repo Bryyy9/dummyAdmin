@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,16 +10,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Domain {
   domainKodifikasiId: number
   namaDomain: string
+  kode: string
+}
+
+interface Contributor {
+  contributorId: number
+  namaContributor: string
 }
 
 export default function CreateLexiconPage() {
   const router = useRouter()
   const [domains, setDomains] = useState<Domain[]>([])
+  const [contributors, setContributors] = useState<Contributor[]>([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     kataLeksikon: "",
@@ -34,21 +41,39 @@ export default function CreateLexiconPage() {
     translationVarians: "",
     deskripsiLain: "",
     domainKodifikasiId: "",
+    contributorId: "",
     statusPreservasi: "MAINTAINED",
     status: "DRAFT",
   })
 
   useEffect(() => {
     fetchDomains()
+    fetchContributors()
   }, [])
 
   const fetchDomains = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/domain-kodifikasi`)
+      if (!response.ok) throw new Error("Failed to fetch domains")
       const data = await response.json()
-      setDomains(data.data || [])
+      // Handle both array and object with data property
+      setDomains(Array.isArray(data) ? data : data.data || [])
     } catch (error) {
       console.error("Error fetching domains:", error)
+      toast.error("Failed to load domains")
+    }
+  }
+
+  const fetchContributors = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contributors`)
+      if (!response.ok) throw new Error("Failed to fetch contributors")
+      const data = await response.json()
+      // Handle both array and object with data property
+      setContributors(Array.isArray(data) ? data : data.data || [])
+    } catch (error) {
+      console.error("Error fetching contributors:", error)
+      toast.error("Failed to load contributors")
     }
   }
 
@@ -65,28 +90,78 @@ export default function CreateLexiconPage() {
     e.preventDefault()
     setLoading(true)
 
+    // Validasi required fields
+    if (!formData.kataLeksikon.trim()) {
+      toast.error("Kata Leksikon is required")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.domainKodifikasiId) {
+      toast.error("Please select a Domain")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.contributorId) {
+      toast.error("Please select a Contributor")
+      setLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/lexicons`, {
+      // Prepare payload - convert string IDs to numbers
+      const payload = {
+        kataLeksikon: formData.kataLeksikon.trim(),
+        ipa: formData.ipa.trim() || "",
+        transliterasi: formData.transliterasi.trim() || "",
+        maknaEtimologi: formData.maknaEtimologi.trim() || "",
+        maknaKultural: formData.maknaKultural.trim() || "",
+        commonMeaning: formData.commonMeaning.trim() || "",
+        translation: formData.translation.trim() || "",
+        varian: formData.varian.trim() || "",
+        translationVarians: formData.translationVarians.trim() || "",
+        deskripsiLain: formData.deskripsiLain.trim() || "",
+        domainKodifikasiId: parseInt(formData.domainKodifikasiId),
+        contributorId: parseInt(formData.contributorId),
+        statusPreservasi: formData.statusPreservasi,
+        status: formData.status,
+      }
+
+      console.log("Sending payload:", payload)
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leksikons`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       })
 
-      if (response.ok) {
-        router.push("/admin/lexicon")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        console.error("Error response:", errorData)
+        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`)
       }
+
+      const result = await response.json()
+      console.log("Success response:", result)
+      
+      toast.success("Lexicon created successfully")
+      router.push("/admin/lexicon")
     } catch (error) {
       console.error("Error creating lexicon:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to create lexicon")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/lexicon">
-          <Button variant="ghost" size="sm">
+          <Button variant="outline" size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
@@ -112,23 +187,42 @@ export default function CreateLexiconPage() {
                   name="kataLeksikon"
                   value={formData.kataLeksikon}
                   onChange={handleChange}
+                  placeholder="e.g., Sego"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ipa">IPA</Label>
-                <Input id="ipa" name="ipa" value={formData.ipa} onChange={handleChange} />
+                <Input 
+                  id="ipa" 
+                  name="ipa" 
+                  value={formData.ipa} 
+                  onChange={handleChange}
+                  placeholder="e.g., [səˈɡo]"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="transliterasi">Transliteration</Label>
-                <Input id="transliterasi" name="transliterasi" value={formData.transliterasi} onChange={handleChange} />
+                <Input
+                  id="transliterasi"
+                  name="transliterasi"
+                  value={formData.transliterasi}
+                  onChange={handleChange}
+                  placeholder="e.g., sego"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commonMeaning">Common Meaning</Label>
-                <Input id="commonMeaning" name="commonMeaning" value={formData.commonMeaning} onChange={handleChange} />
+                <Input
+                  id="commonMeaning"
+                  name="commonMeaning"
+                  value={formData.commonMeaning}
+                  onChange={handleChange}
+                  placeholder="e.g., Rice"
+                />
               </div>
             </div>
 
@@ -140,6 +234,7 @@ export default function CreateLexiconPage() {
                 value={formData.maknaEtimologi}
                 onChange={handleChange}
                 rows={3}
+                placeholder="Explain the etymology..."
               />
             </div>
 
@@ -151,18 +246,31 @@ export default function CreateLexiconPage() {
                 value={formData.maknaKultural}
                 onChange={handleChange}
                 rows={3}
+                placeholder="Explain the cultural significance..."
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="translation">Translation</Label>
-              <Input id="translation" name="translation" value={formData.translation} onChange={handleChange} />
+              <Input
+                id="translation"
+                name="translation"
+                value={formData.translation}
+                onChange={handleChange}
+                placeholder="e.g., Nasi"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="varian">Variants</Label>
-                <Input id="varian" name="varian" value={formData.varian} onChange={handleChange} />
+                <Input
+                  id="varian"
+                  name="varian"
+                  value={formData.varian}
+                  onChange={handleChange}
+                  placeholder="e.g., sega, sekul"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="translationVarians">Translation Variants</Label>
@@ -171,6 +279,7 @@ export default function CreateLexiconPage() {
                   name="translationVarians"
                   value={formData.translationVarians}
                   onChange={handleChange}
+                  placeholder="e.g., nasi, beras"
                 />
               </div>
             </div>
@@ -183,10 +292,11 @@ export default function CreateLexiconPage() {
                 value={formData.deskripsiLain}
                 onChange={handleChange}
                 rows={3}
+                placeholder="Any additional information..."
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="domainKodifikasiId">Domain *</Label>
                 <Select
@@ -197,14 +307,44 @@ export default function CreateLexiconPage() {
                     <SelectValue placeholder="Select domain" />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain) => (
-                      <SelectItem key={domain.domainKodifikasiId} value={domain.domainKodifikasiId.toString()}>
-                        {domain.namaDomain}
-                      </SelectItem>
-                    ))}
+                    {domains.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground">No domains available</div>
+                    ) : (
+                      domains.map((domain) => (
+                        <SelectItem key={domain.domainKodifikasiId} value={domain.domainKodifikasiId.toString()}>
+                          {domain.kode} - {domain.namaDomain}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contributorId">Contributor *</Label>
+                <Select
+                  value={formData.contributorId}
+                  onValueChange={(value) => handleSelectChange("contributorId", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select contributor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contributors.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground">No contributors available</div>
+                    ) : (
+                      contributors.map((contributor) => (
+                        <SelectItem key={contributor.contributorId} value={contributor.contributorId.toString()}>
+                          {contributor.namaContributor}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="statusPreservasi">Preservation Status</Label>
                 <Select
@@ -216,8 +356,8 @@ export default function CreateLexiconPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MAINTAINED">Maintained</SelectItem>
-                    <SelectItem value="ARCHIVED">Archived</SelectItem>
                     <SelectItem value="ENDANGERED">Endangered</SelectItem>
+                    <SelectItem value="CRITICAL">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -237,7 +377,14 @@ export default function CreateLexiconPage() {
 
             <div className="flex gap-4">
               <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Lexicon"}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Lexicon"
+                )}
               </Button>
               <Link href="/admin/lexicon">
                 <Button type="button" variant="outline">

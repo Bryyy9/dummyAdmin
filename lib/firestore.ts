@@ -6,7 +6,7 @@ export const db = getFirestore(app)
 // Collections
 export const COLLECTIONS = {
   CULTURAL_ITEMS: "culturalItems",
-  REGIONS: "regions",
+  // HAPUS BARIS INI: REGIONS: "regions",
   ANALYTICS: "analytics",
 }
 
@@ -45,27 +45,4 @@ export const culturalItemsService = {
   },
 }
 
-// Regions CRUD
-export const regionsService = {
-  async getAll() {
-    const snapshot = await getDocs(collection(db, COLLECTIONS.REGIONS))
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-  },
-
-  async create(data: any) {
-    return await addDoc(collection(db, COLLECTIONS.REGIONS), {
-      ...data,
-      createdAt: new Date().toISOString(),
-    })
-  },
-
-  async update(id: string, data: any) {
-    const docRef = doc(db, COLLECTIONS.REGIONS, id)
-    return await updateDoc(docRef, data)
-  },
-
-  async delete(id: string) {
-    const docRef = doc(db, COLLECTIONS.REGIONS, id)
-    return await deleteDoc(docRef)
-  },
-}
+// HAPUS SELURUH SECTION regionsService

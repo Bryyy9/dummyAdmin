@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   BookOpen,
-  Map,
   BarChart3,
   Settings,
   LogOut,
@@ -22,10 +21,29 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
-const menuItems = [
+// Type definitions
+interface SubmenuItem {
+  href: string
+  label: string
+}
+
+interface MenuItemWithSubmenu {
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  submenu: SubmenuItem[]
+}
+
+interface RegularMenuItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+type MenuItem = MenuItemWithSubmenu | RegularMenuItem
+
+const menuItems: MenuItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/cultural-items", label: "Cultural Items", icon: BookOpen },
-  { href: "/admin/regions", label: "Regions", icon: Map },
   { href: "/admin/contributors", label: "Contributors", icon: Users },
   { href: "/admin/references", label: "Referensi", icon: BookMarked },
   { href: "/admin/assets", label: "Asset", icon: ImageIcon },
@@ -54,6 +72,11 @@ const menuItems = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
+// Type guard function
+function hasSubmenu(item: MenuItem): item is MenuItemWithSubmenu {
+  return "submenu" in item
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -76,7 +99,7 @@ export function Sidebar() {
     setExpandedMenus((prev) => (prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label]))
   }
 
-  const isSubmenuActive = (submenu: any[]) => {
+  const isSubmenuActive = (submenu: SubmenuItem[]) => {
     return submenu.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
   }
 
@@ -105,7 +128,7 @@ export function Sidebar() {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
-            if ("submenu" in item) {
+            if (hasSubmenu(item)) {
               const isExpanded = expandedMenus.includes(item.label)
               const hasActiveSubmenu = isSubmenuActive(item.submenu)
               const Icon = item.icon

@@ -34,7 +34,7 @@ export default function LexiconListPage() {
   const fetchLexicons = async () => {
     try {
       setLoading(true)
-      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/lexicons`)
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/leksikons`)
       url.searchParams.append("page", currentPage.toString())
       url.searchParams.append("limit", "20")
 
@@ -56,7 +56,7 @@ export default function LexiconListPage() {
     if (!confirm("Are you sure you want to delete this lexicon?")) return
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/lexicons/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leksikons/${id}`, {
         method: "DELETE",
       })
 
