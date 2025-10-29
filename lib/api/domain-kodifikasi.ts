@@ -189,16 +189,30 @@ class DomainKodifikasiService {
 
   async create(data: DomainKodifikasiCreateInput): Promise<DomainKodifikasiResponse> {
     try {
+      console.log("[v0] Creating domain with data:", data)
       const response = await fetch(`${API_BASE_URL}/domain-kodifikasi`, {
         method: "POST",
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
       })
-      if (!response.ok) throw new Error(`API Error: ${response.status}`)
-      return response.json()
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error("[v0] API Error Response:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorData,
+          requestData: data,
+        })
+        throw new Error(`API Error: ${response.status} - ${errorData}`)
+      }
+
+      const result = await response.json()
+      console.log("[v0] Domain created successfully:", result)
+      return result
     } catch (error) {
       console.error("[v0] Failed to create domain:", error)
-      throw new Error("Failed to create domain")
+      throw error
     }
   }
 
